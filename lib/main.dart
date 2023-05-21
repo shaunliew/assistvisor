@@ -15,7 +15,8 @@ class MyApp extends StatelessWidget {
       title: 'Assistvisor',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromARGB(255, 33, 138, 243)),
         useMaterial3: true,
       ),
       home: const MyHomePage(title: 'Assistvisor'),

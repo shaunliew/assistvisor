@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:tflite_flutter/tflite_flutter.dart';
-import 'package:yaml/yaml.dart';
 
 class CameraWidget extends StatefulWidget {
   const CameraWidget({Key? key}) : super(key: key);
@@ -15,13 +12,13 @@ class _CameraWidgetState extends State<CameraWidget>
     with WidgetsBindingObserver {
   CameraController? _controller;
   late Future<void> _initializeControllerFuture;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     initializeCamera();
-    //loadModel();
   }
 
   @override
@@ -40,27 +37,6 @@ class _CameraWidgetState extends State<CameraWidget>
     }
   }
 
-  Future<void> loadModel() async {
-    try {
-      String modelPath = 'assets/best_saved_model/best_float32.tflite';
-      String labelsPath = 'assets/best_saved_model/metadata.yaml';
-
-      final interpreterOptions = InterpreterOptions()
-        ..useNnApiForAndroid = true;
-
-      Interpreter interpreter =
-          await Interpreter.fromAsset(modelPath, options: interpreterOptions);
-
-      String labelsData = await rootBundle.loadString(labelsPath);
-      Map<String, dynamic> labelsMap = loadYaml(labelsData);
-      List<String> labels = labelsMap['names'].values.cast<String>().toList();
-
-      // Perform additional setup or initialization if needed
-    } catch (e) {
-      print('Failed to load the model: $e');
-    }
-  }
-
   Future<void> initializeCamera() async {
     try {
       final cameras = await availableCameras();
@@ -72,15 +48,28 @@ class _CameraWidgetState extends State<CameraWidget>
           setState(() {});
         }
       } else {
-        print('No available cameras');
+        setState(() {
+          _errorMessage = 'No available cameras';
+        });
       }
     } catch (e) {
-      print('Error initializing camera: $e');
+      setState(() {
+        _errorMessage = 'Error initializing camera: $e';
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_errorMessage != null) {
+      return Center(
+        child: Text(
+          _errorMessage!,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
     if (_controller == null || !_controller!.value.isInitialized) {
       return Container(); // Return an empty container or a loading indicator
     }
