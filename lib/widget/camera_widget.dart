@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'object_detection_widget.dart';
 
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({Key? key}) : super(key: key);
+  final Function(CameraImage) onCameraImage;
+
+  const CameraWidget({Key? key, required this.onCameraImage}) : super(key: key);
 
   @override
   _CameraWidgetState createState() => _CameraWidgetState();
@@ -13,6 +16,8 @@ class _CameraWidgetState extends State<CameraWidget>
   CameraController? _controller;
   late Future<void> _initializeControllerFuture;
   String? _errorMessage;
+  double widgetWidth = 0.0;
+  double widgetHeight = 0.0;
 
   @override
   void initState() {
@@ -45,7 +50,10 @@ class _CameraWidgetState extends State<CameraWidget>
         _initializeControllerFuture = _controller!.initialize();
         await _initializeControllerFuture;
         if (mounted) {
-          setState(() {});
+          setState(() {
+            widgetWidth = _controller!.value.previewSize!.width;
+            widgetHeight = _controller!.value.previewSize!.height;
+          });
         }
       } else {
         setState(() {
@@ -57,6 +65,10 @@ class _CameraWidgetState extends State<CameraWidget>
         _errorMessage = 'Error initializing camera: $e';
       });
     }
+  }
+
+  void onCameraImage(CameraImage cameraImage) {
+    widget.onCameraImage(cameraImage);
   }
 
   @override
@@ -81,15 +93,24 @@ class _CameraWidgetState extends State<CameraWidget>
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
+            _controller!.startImageStream((CameraImage cameraImage) {
+              onCameraImage(cameraImage);
+            });
+
             return SizedBox(
               width: size.width *
                   1, // Adjust the width as desired (e.g., 80% of the screen width)
               height: size.height *
                   1, // Adjust the height as desired (e.g., 60% of the screen height)
               child: CameraPreview(_controller!),
+              // child: ObjectDetectionWidget(
+              //   cameraImage: _controller!.value.isStreamingImages
+              //       ? _controller!.value.image
+              //       : null,
+              // ),
             );
           } else {
-            return const CircularProgressIndicator();
+            return Container(); // Return a loading indicator
           }
         },
       ),
