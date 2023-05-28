@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'object_detection_widget.dart';
 
 class CameraWidget extends StatefulWidget {
   final Function(CameraImage) onCameraImage;
